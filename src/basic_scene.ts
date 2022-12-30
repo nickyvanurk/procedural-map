@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GUI } from 'dat.gui';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
+import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 
 /**
  * A class to set up some basic scene elements to minimize code in the
@@ -16,9 +17,9 @@ export default class BasicScene extends THREE.Scene {
     height = window.innerHeight;
     debug = false;
 
-    initialize(debug: boolean = true) {
+    initialize(debug: boolean = false) {
         this.camera = new THREE.PerspectiveCamera(35, this.width / this.height, 0.1, 1000);
-        this.camera.position.set(12, 12, 12);
+        this.camera.position.set(0, 25, 50);
 
         this.renderer = new THREE.WebGLRenderer({
             canvas: document.getElementById('app') as HTMLCanvasElement,
@@ -43,11 +44,7 @@ export default class BasicScene extends THREE.Scene {
             this.environment = texture;
             this.renderer.render(this, this.camera);
 
-            const geometry = new THREE.BoxGeometry(1, 1, 1);
-            const material = new THREE.MeshStandardMaterial({color: 0xff9900});
-            let cube = new THREE.Mesh(geometry, material);
-            cube.position.y = 0.5;
-            this.add(cube);
+            this.generateTerrain(20, 20);
         });
 
         if (debug) {
@@ -58,6 +55,25 @@ export default class BasicScene extends THREE.Scene {
             cameraGroup.add(this.camera, 'zoom', 0, 1);
             cameraGroup.open();
         }
+    }
+
+    generateTerrain(width: number, depth: number) {
+        let geometry: THREE.BufferGeometry = new THREE.BoxGeometry(0, 0, 0);
+
+        function createHex(height: number, position: THREE.Vector2) {
+            let geo = new THREE.CylinderGeometry(1, 1, height, 6, 1, false);
+            geo.translate(position.x, height * 0.5, position.y);
+            geometry = mergeBufferGeometries([geometry, geo]);
+        }
+
+        for (let i = -width/2; i < width/2; i++) {
+            for (let j = -depth/2; j < depth/2; j++) {
+                createHex(3, new THREE.Vector2((i + (j % 2) * 0.5) * 1.77, j * 1.535));
+            }
+        }
+
+        let terrain = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({flatShading: true}));
+        this.add(terrain);
     }
 
     static addWindowResizing(camera: THREE.PerspectiveCamera, renderer: THREE.Renderer) {
