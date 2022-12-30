@@ -44,7 +44,7 @@ export default class BasicScene extends THREE.Scene {
             this.environment = texture;
             this.renderer.render(this, this.camera);
 
-            this.generateTerrain(20, 20);
+            this.generateTerrain(22, 22);
         });
 
         if (debug) {
@@ -66,9 +66,13 @@ export default class BasicScene extends THREE.Scene {
             geometry = mergeBufferGeometries([geometry, geo]);
         }
 
+        const terrainRadius = 16;
         for (let i = -width/2; i < width/2; i++) {
             for (let j = -depth/2; j < depth/2; j++) {
-                createHex(3, new THREE.Vector2((i + (j % 2) * 0.5) * 1.77, j * 1.535));
+                const position = new THREE.Vector2((i + (j % 2) * 0.5) * 1.77, j * 1.535);
+                if (position.length() > terrainRadius) continue;
+                console.log(position.length());
+                createHex(3, position);
             }
         }
 
