@@ -16,7 +16,7 @@ export default class BasicScene extends THREE.Scene {
     height = window.innerHeight;
     debug = false;
 
-    async initialize(debug: boolean = true) {
+    initialize(debug: boolean = true) {
         this.camera = new THREE.PerspectiveCamera(35, this.width / this.height, 0.1, 1000);
         this.camera.position.set(12, 12, 12);
 
@@ -32,6 +32,8 @@ export default class BasicScene extends THREE.Scene {
         BasicScene.addWindowResizing(this.camera, this.renderer);
 
         this.orbitals = new OrbitControls(this.camera, this.renderer.domElement);
+        this.orbitals.dampingFactor = 0.05;
+        this.orbitals.enableDamping = true;
 
         this.background = new THREE.Color(0xffeecc);
 
