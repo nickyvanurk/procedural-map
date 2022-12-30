@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { makeNoise2D } from 'fast-simplex-noise';
+import { Mesh } from 'three';
 
 /**
  * A class to set up some basic scene elements to minimize code in the
@@ -58,16 +59,49 @@ export default class BasicScene extends THREE.Scene {
         }
     }
 
-    generateTerrain(width: number, depth: number) {
-        let geometry: THREE.BufferGeometry = new THREE.BoxGeometry(0, 0, 0);
+    async generateTerrain(width: number, depth: number) {
+        const geometry = {
+            stone: new THREE.BoxGeometry(0, 0, 0) as THREE.BufferGeometry,
+            dirt: new THREE.BoxGeometry(0, 0, 0) as THREE.BufferGeometry,
+            dirt2: new THREE.BoxGeometry(0, 0, 0) as THREE.BufferGeometry,
+            sand: new THREE.BoxGeometry(0, 0, 0) as THREE.BufferGeometry,
+            grass: new THREE.BoxGeometry(0, 0, 0) as THREE.BufferGeometry,
+        };
+
+        const maxHeight = 10;
+        const stoneHeight = maxHeight * 0.8;
+        const dirtHeight = maxHeight * 0.7;
+        const grassHeight = maxHeight * 0.5;
+        const sandHeight = maxHeight * 0.3;
+        const dirt2Height = maxHeight * 0;
 
         function createHex(height: number, position: THREE.Vector2) {
             let geo = new THREE.CylinderGeometry(1, 1, height, 6, 1, false);
             geo.translate(position.x, height * 0.5, position.y);
-            geometry = mergeBufferGeometries([geometry, geo]);
+
+            if (height > stoneHeight) {
+                geometry.stone = mergeBufferGeometries([geometry.stone, geo]);
+            } else if (height > dirtHeight) {
+                geometry.dirt = mergeBufferGeometries([geometry.dirt, geo]);
+            } else if (height > grassHeight) {
+                geometry.grass = mergeBufferGeometries([geometry.grass, geo]);
+            } else if (height > sandHeight) {
+                geometry.sand = mergeBufferGeometries([geometry.sand, geo]);
+            } else if (height > dirt2Height) {
+                geometry.dirt2 = mergeBufferGeometries([geometry.dirt2, geo]);
+            }
         }
 
-        const maxHeight = 10;
+        const textures = {
+            dirt: await new THREE.TextureLoader().setPath('assets/').loadAsync('dirt.png'),
+            dirt2: await new THREE.TextureLoader().setPath('assets/').loadAsync('dirt2.jpg'),
+            grass: await new THREE.TextureLoader().setPath('assets/').loadAsync('grass.jpg'),
+            sand: await new THREE.TextureLoader().setPath('assets/').loadAsync('sand.jpg'),
+            water: await new THREE.TextureLoader().setPath('assets/').loadAsync('water.jpg'),
+            stone: await new THREE.TextureLoader().setPath('assets/').loadAsync('stone.png'),
+        };
+
+
         const terrainRadius = 16;
         let noise = makeNoise2D();
         for (let i = -width/2; i < width/2; i++) {
@@ -78,8 +112,19 @@ export default class BasicScene extends THREE.Scene {
             }
         }
 
-        let terrain = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({flatShading: true}));
-        this.add(terrain);
+        function createMesh(geometry: THREE.BufferGeometry, texture: THREE.Texture) {
+            return new Mesh(geometry, new THREE.MeshPhysicalMaterial({
+                flatShading: true,
+                map: texture,
+                envMapIntensity: 1,
+            }));
+        }
+
+        this.add(createMesh(geometry.stone, textures.stone));
+        this.add(createMesh(geometry.dirt, textures.dirt));
+        this.add(createMesh(geometry.grass, textures.grass));
+        this.add(createMesh(geometry.sand, textures.sand));
+        this.add(createMesh(geometry.dirt2, textures.dirt2));
     }
 
     static addWindowResizing(camera: THREE.PerspectiveCamera, renderer: THREE.Renderer) {
