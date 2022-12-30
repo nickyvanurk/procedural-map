@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { makeNoise2D } from 'fast-simplex-noise';
-import { Mesh } from 'three';
+import { Color, Mesh } from 'three';
 
 /**
  * A class to set up some basic scene elements to minimize code in the
@@ -27,18 +27,29 @@ export default class BasicScene extends THREE.Scene {
             canvas: document.getElementById('app') as HTMLCanvasElement,
             antialias: true,
         });
+        this.renderer.setSize(this.width, this.height);
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.renderer.physicallyCorrectLights = true;
-        this.renderer.setSize(this.width, this.height);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        this.background = new THREE.Color(0xffeecc);
 
         BasicScene.addWindowResizing(this.camera, this.renderer);
+
+        const light = new THREE.PointLight(new Color(0xFFCB8E).convertSRGBToLinear().convertSRGBToLinear(), 80, 200, 1);
+        light.position.set(10, 20, 10);
+        light.castShadow = true;
+        light.shadow.mapSize.width = 512;
+        light.shadow.mapSize.height = 512;
+        light.shadow.camera.near = 0.5;
+        light.shadow.camera.far = 500;
+        this.add(light);
 
         this.orbitals = new OrbitControls(this.camera, this.renderer.domElement);
         this.orbitals.dampingFactor = 0.05;
         this.orbitals.enableDamping = true;
-
-        this.background = new THREE.Color(0xffeecc);
 
         console.info('Loading HDR...');
         new RGBELoader().setPath('assets/').load('envmap.hdr', (texture) => {
@@ -113,11 +124,16 @@ export default class BasicScene extends THREE.Scene {
         }
 
         function createMesh(geometry: THREE.BufferGeometry, texture: THREE.Texture) {
-            return new Mesh(geometry, new THREE.MeshPhysicalMaterial({
+            const mesh = new Mesh(geometry, new THREE.MeshPhysicalMaterial({
                 flatShading: true,
                 map: texture,
-                envMapIntensity: 1,
+                envMapIntensity: 0.135,
             }));
+
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            return mesh;
         }
 
         this.add(createMesh(geometry.stone, textures.stone));
