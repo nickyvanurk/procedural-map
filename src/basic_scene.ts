@@ -4,7 +4,6 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { makeNoise2D } from 'fast-simplex-noise';
-import { Color, Mesh } from 'three';
 
 /**
  * A class to set up some basic scene elements to minimize code in the
@@ -38,7 +37,7 @@ export default class BasicScene extends THREE.Scene {
 
         BasicScene.addWindowResizing(this.camera, this.renderer);
 
-        const light = new THREE.PointLight(new Color(0xFFCB8E).convertSRGBToLinear().convertSRGBToLinear(), 80, 200, 1);
+        const light = new THREE.PointLight(new THREE.Color(0xFFCB8E).convertSRGBToLinear().convertSRGBToLinear(), 80, 200, 1);
         light.position.set(10, 20, 10);
         light.castShadow = true;
         light.shadow.mapSize.width = 512;
@@ -112,7 +111,6 @@ export default class BasicScene extends THREE.Scene {
             stone: await new THREE.TextureLoader().setPath('assets/').loadAsync('stone.png'),
         };
 
-
         const terrainRadius = 16;
         let noise = makeNoise2D();
         for (let i = -width/2; i < width/2; i++) {
@@ -124,7 +122,7 @@ export default class BasicScene extends THREE.Scene {
         }
 
         function createMesh(geometry: THREE.BufferGeometry, texture: THREE.Texture) {
-            const mesh = new Mesh(geometry, new THREE.MeshPhysicalMaterial({
+            const mesh = new THREE.Mesh(geometry, new THREE.MeshPhysicalMaterial({
                 flatShading: true,
                 map: texture,
                 envMapIntensity: 0.135,
@@ -141,6 +139,38 @@ export default class BasicScene extends THREE.Scene {
         this.add(createMesh(geometry.grass, textures.grass));
         this.add(createMesh(geometry.sand, textures.sand));
         this.add(createMesh(geometry.dirt2, textures.dirt2));
+
+        const water = new THREE.Mesh(
+            new THREE.CylinderGeometry(17, 17, maxHeight * 0.2, 50),
+            new THREE.MeshPhysicalMaterial({
+                color: new THREE.Color(0x55aaff).convertSRGBToLinear().multiplyScalar(3),
+                ior: 1.4,
+                transmission: 1,
+                transparent: true,
+                envMapIntensity: 0.2,
+                roughness: 1,
+                metalness: 0.025,
+                roughnessMap: textures.water,
+                metalnessMap: textures.water,
+                //@ts-ignore
+                thickness: 1.5,
+            })
+        );
+        water.receiveShadow = true;
+        water.position.set(0, maxHeight * 0.1, 0);
+        this.add(water);
+
+        const waiterContainer =new THREE.Mesh(
+            new THREE.CylinderGeometry(17.1, 17.1, maxHeight * 0.25, 50, 1, true),
+            new THREE.MeshPhysicalMaterial({
+                envMapIntensity: 0.2,
+                map: textures.dirt,
+                side: THREE.DoubleSide,
+            })
+        );
+        waiterContainer.receiveShadow = true;
+        waiterContainer.position.set(0, maxHeight * 0.125, 0);
+        this.add(waiterContainer);
     }
 
     static addWindowResizing(camera: THREE.PerspectiveCamera, renderer: THREE.Renderer) {
