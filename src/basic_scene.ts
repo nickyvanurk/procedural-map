@@ -3,6 +3,7 @@ import { GUI } from 'dat.gui';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
+import { makeNoise2D } from 'fast-simplex-noise';
 
 /**
  * A class to set up some basic scene elements to minimize code in the
@@ -18,8 +19,8 @@ export default class BasicScene extends THREE.Scene {
     debug = false;
 
     initialize(debug: boolean = false) {
-        this.camera = new THREE.PerspectiveCamera(35, this.width / this.height, 0.1, 1000);
-        this.camera.position.set(0, 25, 50);
+        this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.1, 1000);
+        this.camera.position.set(17, 31, 33);
 
         this.renderer = new THREE.WebGLRenderer({
             canvas: document.getElementById('app') as HTMLCanvasElement,
@@ -66,13 +67,14 @@ export default class BasicScene extends THREE.Scene {
             geometry = mergeBufferGeometries([geometry, geo]);
         }
 
+        const maxHeight = 10;
         const terrainRadius = 16;
+        let noise = makeNoise2D();
         for (let i = -width/2; i < width/2; i++) {
             for (let j = -depth/2; j < depth/2; j++) {
                 const position = new THREE.Vector2((i + (j % 2) * 0.5) * 1.77, j * 1.535);
                 if (position.length() > terrainRadius) continue;
-                console.log(position.length());
-                createHex(3, position);
+                createHex(Math.pow((noise(i * 0.1, j * 0.1) + 1) * 0.5, 1.5) * maxHeight, position);
             }
         }
 

@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "dat.gui": "^0.7.9",
+    "fast-simplex-noise": "^4.0.0",
     "three": "^0.148.0"
   }
 }
