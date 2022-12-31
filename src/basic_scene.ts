@@ -160,7 +160,7 @@ export default class BasicScene extends THREE.Scene {
         water.position.set(0, maxHeight * 0.1, 0);
         this.add(water);
 
-        const waiterContainer =new THREE.Mesh(
+        const container =new THREE.Mesh(
             new THREE.CylinderGeometry(17.1, 17.1, maxHeight * 0.25, 50, 1, true),
             new THREE.MeshPhysicalMaterial({
                 envMapIntensity: 0.2,
@@ -168,9 +168,21 @@ export default class BasicScene extends THREE.Scene {
                 side: THREE.DoubleSide,
             })
         );
-        waiterContainer.receiveShadow = true;
-        waiterContainer.position.set(0, maxHeight * 0.125, 0);
-        this.add(waiterContainer);
+        container.receiveShadow = true;
+        container.position.set(0, maxHeight * 0.125, 0);
+        this.add(container);
+
+        const floor =new THREE.Mesh(
+            new THREE.CylinderGeometry(18.5, 18.5, maxHeight * 0.25, 50),
+            new THREE.MeshPhysicalMaterial({
+                envMapIntensity: 0.1,
+                map: textures.dirt2,
+                side: THREE.DoubleSide,
+            })
+        );
+        floor.receiveShadow = true;
+        floor.position.set(0, -maxHeight * 0.06, 0);
+        this.add(floor);
     }
 
     static addWindowResizing(camera: THREE.PerspectiveCamera, renderer: THREE.Renderer) {
