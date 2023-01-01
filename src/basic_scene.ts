@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { makeNoise2D } from 'fast-simplex-noise';
+import { Mesh } from 'three';
 
 /**
  * A class to set up some basic scene elements to minimize code in the
@@ -57,6 +58,7 @@ export default class BasicScene extends THREE.Scene {
             this.renderer.render(this, this.camera);
 
             this.generateTerrain(22, 22);
+            this.generateClouds();
         });
 
         if (debug) {
@@ -219,6 +221,48 @@ export default class BasicScene extends THREE.Scene {
         floor.receiveShadow = true;
         floor.position.set(0, -maxHeight * 0.06, 0);
         this.add(floor);
+    }
+
+    generateClouds() {
+        let geometry: THREE.BufferGeometry = new THREE.SphereGeometry(0, 0, 0);
+
+        const positions = [new THREE.Vector3(Math.random() * 20 - 10, Math.random() * 2.5 + 13.5, Math.random() * 20 - 10)];
+        while (positions.length < 3) {
+            const position = new THREE.Vector3(Math.random() * 20 - 10, Math.random() * 2.5 + 13.5, Math.random() * 20 - 10);
+            let validPosition = true;
+
+            for (const p of positions) {
+                if (position.distanceTo(p) < 10) {
+                    validPosition = false;
+                }
+            }
+
+            if (validPosition) {
+                positions.push(position);
+            }
+        }
+
+        for (let i = 0; i < 3; i++) {
+            const cloud1 = new THREE.SphereGeometry(1.2, 7, 7);
+            const cloud2 = new THREE.SphereGeometry(1.5, 7, 7);
+            const cloud3 = new THREE.SphereGeometry(0.9, 7, 7);
+
+            cloud1.translate(-1.85, Math.random() * 0.3, 0);
+            cloud2.translate(0,     Math.random() * 0.3, 0);
+            cloud3.translate(1.85,  Math.random() * 0.3, 0);
+
+            const cloudGeometry = mergeBufferGeometries([cloud1, cloud2, cloud3]);
+            cloudGeometry.rotateY(Math.random() * Math.PI * 2);
+            cloudGeometry.translate(positions[i].x, positions[i].y, positions[i].z);
+
+            geometry = mergeBufferGeometries([geometry, cloudGeometry]);
+        }
+
+        this.add(new Mesh(geometry, new THREE.MeshStandardMaterial({
+            envMapIntensity: 0.75,
+            flatShading: true
+            }))
+        );
     }
 
     static addWindowResizing(camera: THREE.PerspectiveCamera, renderer: THREE.Renderer) {
