@@ -93,6 +93,22 @@ export default class BasicScene extends THREE.Scene {
             return geometry;
         }
 
+        function tree(height: number, position: THREE.Vector2) {
+            const treeHeight = Math.random() + 1.25;
+
+            const geometry1 = new THREE.CylinderGeometry(0, 1.5, treeHeight, 3);
+            geometry1.translate(position.x, height + 1, position.y);
+
+            const geometry2 = new THREE.CylinderGeometry(0, 1.15, treeHeight, 3);
+            geometry2.translate(position.x, height + treeHeight * 0.6 + 1, position.y);
+
+            const geometry3 = new THREE.CylinderGeometry(0, 0.8, treeHeight, 3);
+            geometry3.translate(position.x, height + treeHeight * 1.25 + 1, position.y);
+
+
+            return mergeBufferGeometries([geometry1, geometry2, geometry3]);
+        }
+
         function createHex(height: number, position: THREE.Vector2) {
             let geo = new THREE.CylinderGeometry(1, 1, height, 6, 1, false);
             geo.translate(position.x, height * 0.5, position.y);
@@ -105,6 +121,10 @@ export default class BasicScene extends THREE.Scene {
                 }
             } else if (height > dirtHeight) {
                 geometry.dirt = mergeBufferGeometries([geometry.dirt, geo]);
+
+                if (Math.random() > 0.8) {
+                    geometry.grass = mergeBufferGeometries([geometry.grass, tree(height, position)]);
+                }
             } else if (height > grassHeight) {
                 geometry.grass = mergeBufferGeometries([geometry.grass, geo]);
             } else if (height > sandHeight) {
